@@ -1,16 +1,46 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link , useNavigate} from "react-router-dom";
 import { Form, Button, Row, Col } from "react-bootstrap";
+import {useDispatch, useSelector} from 'react-redux'
 import FormContainer from "../components/Formcontainer";
+import { useRegisterMutation } from "../Slices/userApiSlice";
+import { setCredetials } from "../Slices/authSlice";
+import { toast } from "react-toastify";
+import Loader from "../components/Loader";
 
 const RegisterScreen = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const navigate  = useNavigate();
+  const dispatch = useDispatch();
+
+  const [register, {isLoding}] = useRegisterMutation();
+
+  const {userInfo  } = useSelector((state) => state.auth)
+
+  useEffect(() => {
+    if(userInfo){
+      navigate('/' )
+    }
+  }, [navigate,userInfo])
+
   const submitHandler = async (e) => {
     e.preventDefault();
-    console.log("Submit Handler");
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+    } else {
+      try {
+        const res = await register({ name, email, password }).unwrap();
+        dispatch(setCredetials({ ...res }));
+        navigate('/');
+      } catch (err) {
+        toast.error(err?.data?.message || err.error);
+      }
+    }
   };
   return (
     <FormContainer>
@@ -52,9 +82,10 @@ const RegisterScreen = () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
           ></Form.Control>
         </Form.Group>
+        {isLoding && <Loader />}
         <Button type="submit" variant="primary" className="mt-3">
           Sign Up
-        </Button>It seems that your work experience is either not time-framed correctly or has no present time experience. Make sure you include the dates (mm/yy) of your employment in all of your positions before the main description of the duties.
+        </Button>
         <Row className="py-3">
           <Col>
             Already have a account? <Link to="/login">Login</Link>
