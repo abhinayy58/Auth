@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cookieParser from 'cookie-parser'
+import      path from 'path'
 dotenv.config()
 import connectDB from './config/db.js';
 import cors from 'cors';
@@ -19,7 +20,18 @@ app.use(express.urlencoded({ extended: true }));
 connectDB()
 app.use('/api/users',userRoutes)
 
-app.get("/", (req, res) => res.send("Server is Ready"));
+
+if(process.env.NODE_ENV === 'production'){
+    const __dirname = path.resolve()
+    app.use(express.static(path.join(__dirname, 'frontend/build')))
+    app.get('*', (req,res) => {
+res.sendFile(path.resolve(__dirname,'frontend', 'build', 'index.html'))
+    })
+}else {
+    app.get("/", (req, res) => res.send("Server is Ready"));   
+}
+
+ 
 
 app.use(notFound)
 app.use(errorHandler)
